@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { convertCurrency } from '../lib/api'
 import { useEffect } from 'react'
 
@@ -70,7 +70,7 @@ export default function ConverterForm() {
       setConvertedFromCurrency(fromCurrency)
       setConvertedToCurrency(toCurrency)
       setAmount(inputAmount) // Só atualiza `amount` depois da conversão
-    } catch (err) {
+    } catch {
       setError('Falha ao obter conversão')
     } finally {
       setLoading(false)
@@ -92,7 +92,7 @@ export default function ConverterForm() {
     setInputText(e.target.value)
   }
 
-  function handleInputBlur() {
+  const handleInputBlur = useCallback(() => {
     let formatted = ''
 
     if (fromCurrency === 'BRL') {
@@ -110,18 +110,14 @@ export default function ConverterForm() {
     }
 
     setInputText(formatted)
-  }
+  }, [fromCurrency, inputAmount])
 
   useEffect(() => {
     handleInputBlur()
-  }, [fromCurrency])
+  }, [handleInputBlur])
 
   function handleInputFocus() {
     setInputText(inputAmount.toString().replace('.', ','))
-  }
-
-  const getCurrencyName = (code: string) => {
-    return currencies.find(c => c.code === code)?.name || code
   }
 
   return (
@@ -200,6 +196,15 @@ export default function ConverterForm() {
           </p>
         </div>
       )}
+
+      <div>
+        <p className="font-thin">Thin (100)</p>
+        <p className="font-light">Light (300)</p>
+        <p className="font-normal">Normal (400)</p>
+        <p className="font-semibold">Semi-bold (600)</p>
+        <p className="font-bold">Bold (700)</p>
+        <p className="font-extrabold">Extra-bold (800)</p>
+      </div>
     </div>
   )
 }
