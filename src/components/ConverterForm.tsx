@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { convertCurrency } from '../lib/api'
+import { useEffect } from 'react'
 
 const currencies = [
   { code: 'BRL', name: 'Real Brasileiro' },
@@ -48,6 +49,8 @@ export default function ConverterForm() {
   const [result, setResult] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [convertedFromCurrency, setConvertedFromCurrency] = useState(fromCurrency)
+  const [convertedToCurrency, setConvertedToCurrency] = useState(toCurrency)
 
   async function handleConvert() {
     if (inputAmount <= 0) {
@@ -64,12 +67,57 @@ export default function ConverterForm() {
       const data = await convertCurrency(fromCurrency, toCurrency, inputAmount)
       setResult(data.result)
       setRate(data.rate)
+      setConvertedFromCurrency(fromCurrency)
+      setConvertedToCurrency(toCurrency)
       setAmount(inputAmount) // Só atualiza `amount` depois da conversão
     } catch (err) {
       setError('Falha ao obter conversão')
     } finally {
       setLoading(false)
     }
+  }
+
+  const [inputText, setInputText] = useState('')
+
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value.replace(',', '.')
+    const numeric = parseFloat(raw)
+
+    if (!isNaN(numeric)) {
+      setInputAmount(numeric)
+    } else {
+      setInputAmount(0)
+    }
+
+    setInputText(e.target.value)
+  }
+
+  function handleInputBlur() {
+    let formatted = ''
+
+    if (fromCurrency === 'BRL') {
+      formatted = inputAmount.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        minimumFractionDigits: 2,
+      })
+    } else {
+      formatted = inputAmount.toLocaleString('en-US', {
+        style: 'currency',
+        currency: fromCurrency,
+        minimumFractionDigits: 2,
+      })
+    }
+
+    setInputText(formatted)
+  }
+
+  useEffect(() => {
+    handleInputBlur()
+  }, [fromCurrency])
+
+  function handleInputFocus() {
+    setInputText(inputAmount.toString().replace('.', ','))
   }
 
   const getCurrencyName = (code: string) => {
@@ -79,39 +127,51 @@ export default function ConverterForm() {
   return (
     <div className="bg-white p-6 rounded shadow space-y-4">
       <div className="flex gap-4">
-        <input
-          type="number"
-          min="0"
-          step="any"
-          className="flex-1 border border-gray-300 rounded px-3 py-2"
-          placeholder="Valor"
-          value={inputAmount}
-          onChange={e => setInputAmount(parseFloat(e.target.value))}
-        />
+        <div className='flex flex-col'>
+          <label htmlFor="amount">Valor</label>
+          <input
+            type="text"
+            id='amount'
+            inputMode="decimal"
+            className="flex-1 border border-gray-300 rounded px-3 py-2"
+            value={inputText}
+            onChange={handleInputChange}
+            onBlur={handleInputBlur}
+            onFocus={handleInputFocus}
+          />
+        </div>
 
-        <select
-          className="border border-gray-300 rounded px-3 py-2"
-          value={fromCurrency}
-          onChange={e => setFromCurrency(e.target.value)}
-        >
-          {currencies.map(c => (
-            <option key={c.code} value={c.code}>
-              {c.code} - {c.name}
-            </option>
-          ))}
-        </select>
+        <div className="flex flex-col">
+          <label htmlFor="amount">De</label>
+          <select
+            className="border border-gray-300 rounded px-3 py-2"
+            id='fromCurrency'
+            value={fromCurrency}
+            onChange={e => setFromCurrency(e.target.value)}
+          >
+            {currencies.map(c => (
+              <option key={c.code} value={c.code}>
+                {c.code} - {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <select
-          className="border border-gray-300 rounded px-3 py-2"
-          value={toCurrency}
-          onChange={e => setToCurrency(e.target.value)}
-        >
-          {currencies.map(c => (
-            <option key={c.code} value={c.code}>
-              {c.code} - {c.name}
-            </option>
-          ))}
-        </select>
+        <div className="flex flex-col">
+          <label htmlFor="amount">Para</label>
+          <select
+            className="border border-gray-300 rounded px-3 py-2"
+            id='toCurrency'
+            value={toCurrency}
+            onChange={e => setToCurrency(e.target.value)}
+          >
+            {currencies.map(c => (
+              <option key={c.code} value={c.code}>
+                {c.code} - {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <button
@@ -127,16 +187,16 @@ export default function ConverterForm() {
       {result !== null && (
         <div className="mt-6 space-y-2">
           <p className="text-lg font-semibold">
-            {amount.toFixed(2)} {getCurrencyName(fromCurrency)} =
+            {amount.toFixed(2)} {convertedFromCurrency} =
           </p>
           <p className="text-xl font-bold">
-            {result.toFixed(6)} {getCurrencyName(toCurrency)}
+            {result.toFixed(6)} {convertedToCurrency}
           </p>
           <p>
-            1 {fromCurrency} = {rate.toFixed(6)} {toCurrency}
+            1 {convertedFromCurrency} = {rate.toFixed(6)} {convertedToCurrency}
           </p>
           <p>
-            1 {toCurrency} = {(1 / rate).toFixed(6)} {fromCurrency}
+            1 {convertedToCurrency} = {(1 / rate).toFixed(6)} {convertedFromCurrency}
           </p>
         </div>
       )}
