@@ -1,8 +1,9 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { convertCurrency } from '../lib/api'
 import { useEffect } from 'react'
+import { FaExchangeAlt } from 'react-icons/fa';
 
 const currencies = [
   { code: 'BRL', name: 'Real Brasileiro' },
@@ -45,12 +46,27 @@ export default function ConverterForm() {
   const [fromCurrency, setFromCurrency] = useState('BRL')
   const [toCurrency, setToCurrency] = useState('USD')
   const [amount, setAmount] = useState<number>(0) // Armazena o valor usado na última conversão
+  const [displayAmount, setDisplayAmount] = useState(fromCurrency) // valor exibido no input
   const [rate, setRate] = useState<number>(0)
   const [result, setResult] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [convertedFromCurrency, setConvertedFromCurrency] = useState(fromCurrency)
   const [convertedToCurrency, setConvertedToCurrency] = useState(toCurrency)
+
+  useEffect(() => {
+    const formatted = inputAmount.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: fromCurrency,
+    })
+    setDisplayAmount(formatted)
+
+    // Limpa resultados anteriores
+    setResult(null)
+    setRate(0)
+    setConvertedFromCurrency(fromCurrency)
+    setConvertedToCurrency(toCurrency)
+  }, [fromCurrency])
 
   async function handleConvert() {
     if (inputAmount <= 0) {
@@ -77,70 +93,70 @@ export default function ConverterForm() {
     }
   }
 
-  const [inputText, setInputText] = useState('')
-
-  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const raw = e.target.value.replace(',', '.')
-    const numeric = parseFloat(raw)
-
-    if (!isNaN(numeric)) {
-      setInputAmount(numeric)
-    } else {
-      setInputAmount(0)
-    }
-
-    setInputText(e.target.value)
-  }
-
-  const handleInputBlur = useCallback(() => {
-    let formatted = ''
-
-    if (fromCurrency === 'BRL') {
-      formatted = inputAmount.toLocaleString('pt-BR', {
-        style: 'currency',
-        currency: 'BRL',
-        minimumFractionDigits: 2,
-      })
-    } else {
-      formatted = inputAmount.toLocaleString('en-US', {
-        style: 'currency',
-        currency: fromCurrency,
-        minimumFractionDigits: 2,
-      })
-    }
-
-    setInputText(formatted)
-  }, [fromCurrency, inputAmount])
-
-  useEffect(() => {
-    handleInputBlur()
-  }, [handleInputBlur])
-
-  function handleInputFocus() {
-    setInputText(inputAmount.toString().replace('.', ','))
-  }
-
   return (
     <div className="bg-white p-6 rounded shadow space-y-4">
-      <div className="flex gap-4">
-        <div className='flex flex-col'>
+      <div className="flex gap-4 items-end">
+        <div className='flex flex-col flex-1'>
           <label htmlFor="amount">Valor</label>
           <input
             type="text"
-            id='amount'
-            inputMode="decimal"
-            className="flex-1 border border-gray-300 rounded px-3 py-2"
-            value={inputText}
-            onChange={handleInputChange}
-            onBlur={handleInputBlur}
-            onFocus={handleInputFocus}
+            id="amount"
+            className="h-10 border border-gray-300 rounded px-3 py-2"
+            value={displayAmount}
+            onChange={e => {
+              const raw = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.')
+              const parsed = parseFloat(raw)
+
+              // Verifica se o número é grande demais
+              const digitsOnly = raw.replace('.', '').replace(/^0+/, '') // remove ponto e zeros à esquerda
+              const maxDigits = 15
+
+              setDisplayAmount(e.target.value)
+
+              if (digitsOnly.length > maxDigits) {
+                setInputAmount(0)
+                setResult(null)
+                setError('Muitos dígitos! Tente com um número menor.')
+                return
+              }
+
+              if (!isNaN(parsed)) {
+                setInputAmount(parsed)
+                setError(null)
+
+                if (rate > 0) {
+                  setResult(parsed * rate)
+                  setAmount(parsed)
+                  setConvertedFromCurrency(fromCurrency)
+                  setConvertedToCurrency(toCurrency)
+                }
+              } else {
+                setInputAmount(0)
+                setResult(null)
+                setError('Digite um valor válido')
+              }
+            }}
+            onBlur={() => {
+              const formatted = inputAmount.toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: fromCurrency,
+              })
+              setDisplayAmount(formatted)
+            }}
+            onFocus={() => {
+              if (inputAmount === 0) {
+                setDisplayAmount('')
+              } else {
+                setDisplayAmount(inputAmount.toString())
+              }
+            }}
           />
         </div>
 
         <div className="flex flex-col">
           <label htmlFor="amount">De</label>
           <select
-            className="border border-gray-300 rounded px-3 py-2"
+            className="h-10 border border-gray-300 rounded px-3 py-2"
             id='fromCurrency'
             value={fromCurrency}
             onChange={e => setFromCurrency(e.target.value)}
@@ -153,10 +169,21 @@ export default function ConverterForm() {
           </select>
         </div>
 
+        <div className="flex items-end">
+          <button 
+            className='bg-blue-600 hover:bg-blue-700 rounded-full p-2 text-white w-10 h-10 flex items-center justify-center cursor-pointer'
+            onClick={() => {
+              setFromCurrency(toCurrency)
+              setToCurrency(fromCurrency)
+            }}>
+            <FaExchangeAlt />
+          </button>
+        </div>
+
         <div className="flex flex-col">
           <label htmlFor="amount">Para</label>
           <select
-            className="border border-gray-300 rounded px-3 py-2"
+            className="h-10 border border-gray-300 rounded px-3 py-2"
             id='toCurrency'
             value={toCurrency}
             onChange={e => setToCurrency(e.target.value)}
@@ -173,7 +200,7 @@ export default function ConverterForm() {
       <button
         onClick={handleConvert}
         disabled={loading}
-        className="w-40 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+        className="w-40 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50 cursor-pointer"
       >
         {loading ? 'Convertendo...' : 'Converter'}
       </button>
@@ -196,15 +223,6 @@ export default function ConverterForm() {
           </p>
         </div>
       )}
-
-      <div>
-        <p className="font-thin">Thin (100)</p>
-        <p className="font-light">Light (300)</p>
-        <p className="font-normal">Normal (400)</p>
-        <p className="font-semibold">Semi-bold (600)</p>
-        <p className="font-bold">Bold (700)</p>
-        <p className="font-extrabold">Extra-bold (800)</p>
-      </div>
     </div>
   )
 }
