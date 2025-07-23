@@ -94,14 +94,20 @@ export default function ConverterForm() {
   }
 
   return (
-    <div className="bg-white p-6 rounded shadow space-y-4">
-      <div className="flex gap-4 items-end">
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        handleConvert()
+      }}
+      className="bg-white p-6 rounded shadow space-y-4 w-full max-w-[450px] md:w-auto md:max-w-none"
+    >
+      <div className="flex flex-col flex-wrap gap-4 items-stretch">
         <div className='flex flex-col flex-1'>
           <label htmlFor="amount">Valor</label>
           <input
             type="text"
             id="amount"
-            className="h-10 border border-gray-300 rounded px-3 py-2"
+            className="h-10 border border-gray-300 rounded px-3 py-2 w-full"
             value={displayAmount}
             onChange={e => {
               const raw = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.')
@@ -153,47 +159,49 @@ export default function ConverterForm() {
           />
         </div>
 
-        <div className="flex flex-col">
-          <label htmlFor="amount">De</label>
-          <select
-            className="h-10 border border-gray-300 rounded px-3 py-2"
-            id='fromCurrency'
-            value={fromCurrency}
-            onChange={e => setFromCurrency(e.target.value)}
-          >
-            {currencies.map(c => (
-              <option key={c.code} value={c.code}>
-                {c.code} - {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        <div className='flex flex-col md:flex-row gap-4'>
+          <div className="flex flex-col">
+            <label htmlFor="amount">De</label>
+            <select
+              className="h-10 border border-gray-300 rounded px-3 py-2 w-full"
+              id='fromCurrency'
+              value={fromCurrency}
+              onChange={e => setFromCurrency(e.target.value)}
+            >
+              {currencies.map(c => (
+                <option key={c.code} value={c.code}>
+                  {c.code} - {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="flex items-end">
-          <button 
-            className='bg-blue-600 hover:bg-blue-700 rounded-full p-2 text-white w-10 h-10 flex items-center justify-center cursor-pointer'
-            onClick={() => {
-              setFromCurrency(toCurrency)
-              setToCurrency(fromCurrency)
-            }}>
-            <FaExchangeAlt />
-          </button>
-        </div>
+          <div className="flex items-end md:self-end">
+            <button
+              className='bg-blue-600 hover:bg-blue-700 rounded-full p-2 text-white w-10 h-10 flex items-center justify-center cursor-pointer'
+              onClick={() => {
+                setFromCurrency(toCurrency)
+                setToCurrency(fromCurrency)
+              }}>
+              <FaExchangeAlt />
+            </button>
+          </div>
 
-        <div className="flex flex-col">
-          <label htmlFor="amount">Para</label>
-          <select
-            className="h-10 border border-gray-300 rounded px-3 py-2"
-            id='toCurrency'
-            value={toCurrency}
-            onChange={e => setToCurrency(e.target.value)}
-          >
-            {currencies.map(c => (
-              <option key={c.code} value={c.code}>
-                {c.code} - {c.name}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-col">
+            <label htmlFor="amount">Para</label>
+            <select
+              className="h-10 border border-gray-300 rounded px-3 py-2 w-full"
+              id='toCurrency'
+              value={toCurrency}
+              onChange={e => setToCurrency(e.target.value)}
+            >
+              {currencies.map(c => (
+                <option key={c.code} value={c.code}>
+                  {c.code} - {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -223,6 +231,6 @@ export default function ConverterForm() {
           </p>
         </div>
       )}
-    </div>
+    </form>
   )
 }
