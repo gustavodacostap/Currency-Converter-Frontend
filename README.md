@@ -2,7 +2,7 @@
 
 Este é o frontend de um conversor de moedas moderno, desenvolvido com Next.js, React, TypeScript e Tailwind CSS. A aplicação consome uma API própria (projeto separado) que fornece taxas de câmbio em tempo real.
 
-👉 [Acesse o projeto online aqui] (https://currency-converter-frontend-ruddy.vercel.app/)
+👉 [Acesse o projeto online aqui](https://currency-converter-frontend-ruddy.vercel.app/)
 
 ## 🚀 Tecnologias utilizadas
 
