@@ -1,5 +1,6 @@
 'use client'
 
+import Select from 'react-select'
 import { useState } from 'react'
 import { convertCurrency } from '../lib/api'
 import { useEffect } from 'react'
@@ -53,6 +54,11 @@ export default function ConverterForm() {
   const [error, setError] = useState<string | null>(null)
   const [convertedFromCurrency, setConvertedFromCurrency] = useState(fromCurrency)
   const [convertedToCurrency, setConvertedToCurrency] = useState(toCurrency)
+  const [hasMounted, setHasMounted] = useState(false)
+
+  useEffect(() => {
+    setHasMounted(true)
+  }, [])
 
   useEffect(() => {
     const formatted = inputAmount.toLocaleString('pt-BR', {
@@ -93,6 +99,33 @@ export default function ConverterForm() {
     }
   }
 
+  const currencyOptions = currencies.map(c => ({
+    value: c.code,
+    label: `${c.code} - ${c.name}`
+  }))
+
+  const customStyles = {
+    control: (base: any, state: any) => ({
+      ...base,
+      borderColor: state.isFocused ? '#155DFC' : '#D1D5DB',
+      boxShadow: state.isFocused ? '0 0 0 1px #155DFC' : 'none',
+      cursor: 'pointer',
+    }),
+    option: (base: any, state: any) => ({
+      ...base,
+      backgroundColor: state.isFocused ? '#E0ECFF' : 'white',
+      color: 'black',
+      '&:active': {
+        backgroundColor: '#E0ECFF',
+      },
+      cursor: 'pointer',
+    }),
+    singleValue: (base: any) => ({
+      ...base,
+      color: '#111827',
+    }),
+  }
+
   return (
     <form
       onSubmit={(e) => {
@@ -107,7 +140,7 @@ export default function ConverterForm() {
           <input
             type="text"
             id="amount"
-            className="h-10 border border-gray-300 rounded px-3 py-2 w-full"
+            className="h-10 border border-gray-300 rounded px-3 py-2 w-full focus:border-blue-600 focus:border-2 focus:outline-none"
             value={displayAmount}
             onChange={e => {
               const raw = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.')
@@ -162,18 +195,16 @@ export default function ConverterForm() {
         <div className='flex flex-col md:flex-row gap-4'>
           <div className="flex flex-col">
             <label htmlFor="amount">De</label>
-            <select
-              className="h-10 border border-gray-300 rounded px-3 py-2 w-full"
-              id='fromCurrency'
-              value={fromCurrency}
-              onChange={e => setFromCurrency(e.target.value)}
-            >
-              {currencies.map(c => (
-                <option key={c.code} value={c.code}>
-                  {c.code} - {c.name}
-                </option>
-              ))}
-            </select>
+            {hasMounted && (
+              <Select
+                id="fromCurrency"
+                className="w-full"
+                options={currencyOptions}
+                value={currencyOptions.find(option => option.value === fromCurrency)}
+                onChange={option => setFromCurrency(option?.value || '')}
+                styles={customStyles}
+              />
+            )}
           </div>
 
           <div className="flex items-end md:self-end">
@@ -189,18 +220,16 @@ export default function ConverterForm() {
 
           <div className="flex flex-col">
             <label htmlFor="amount">Para</label>
-            <select
-              className="h-10 border border-gray-300 rounded px-3 py-2 w-full"
-              id='toCurrency'
-              value={toCurrency}
-              onChange={e => setToCurrency(e.target.value)}
-            >
-              {currencies.map(c => (
-                <option key={c.code} value={c.code}>
-                  {c.code} - {c.name}
-                </option>
-              ))}
-            </select>
+            {hasMounted && (
+              <Select
+                id="toCurrency"
+                className="w-full"
+                options={currencyOptions}
+                value={currencyOptions.find(option => option.value === toCurrency)}
+                onChange={option => setToCurrency(option?.value || '')}
+                styles={customStyles}
+              />
+            )}
           </div>
         </div>
       </div>
