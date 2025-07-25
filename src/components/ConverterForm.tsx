@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { convertCurrency } from '../lib/api'
 import { useEffect } from 'react'
 import { FaExchangeAlt } from 'react-icons/fa';
+import { GroupBase, StylesConfig } from 'react-select'
 
 const currencies = [
   { code: 'BRL', name: 'Real Brasileiro' },
@@ -61,6 +62,11 @@ export default function ConverterForm() {
   }, [])
 
   useEffect(() => {
+    setHasMounted(true)
+  }, [])
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
     const formatted = inputAmount.toLocaleString('pt-BR', {
       style: 'currency',
       currency: fromCurrency,
@@ -104,14 +110,20 @@ export default function ConverterForm() {
     label: `${c.code} - ${c.name}`
   }))
 
-  const customStyles = {
-    control: (base: any, state: any) => ({
+  type CurrencyOption = {
+    value: string
+    label: string
+  }
+
+  const customStyles: StylesConfig<CurrencyOption, false,
+    GroupBase<CurrencyOption>> = {
+    control: (base, state) => ({
       ...base,
       borderColor: state.isFocused ? '#155DFC' : '#D1D5DB',
       boxShadow: state.isFocused ? '0 0 0 1px #155DFC' : 'none',
       cursor: 'pointer',
     }),
-    option: (base: any, state: any) => ({
+    option: (base, state) => ({
       ...base,
       backgroundColor: state.isFocused ? '#E0ECFF' : 'white',
       color: 'black',
@@ -120,7 +132,7 @@ export default function ConverterForm() {
       },
       cursor: 'pointer',
     }),
-    singleValue: (base: any) => ({
+    singleValue: (base) => ({
       ...base,
       color: '#111827',
     }),
