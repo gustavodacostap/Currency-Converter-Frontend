@@ -276,6 +276,8 @@ export default function ConverterForm() {
 
           <div className="flex items-end md:self-end">
             <button
+              aria-label="Inverter moedas"
+              title="Inverter moedas"
               className="bg-blue-600 hover:bg-blue-700 rounded-full p-2 text-white w-10 h-10 flex items-center justify-center cursor-pointer"
               onClick={() => {
                 setFromCurrency(toCurrency);
