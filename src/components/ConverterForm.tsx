@@ -63,22 +63,20 @@ export default function ConverterForm() {
   }, []);
 
   useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
-  useEffect(() => {
     const formatted = inputAmount.toLocaleString("pt-BR", {
       style: "currency",
       currency: fromCurrency,
     });
     setDisplayAmount(formatted);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fromCurrency]);
 
-    // Limpa resultados anteriores
+  useEffect(() => {
     setResult(null);
     setRate(0);
     setConvertedFromCurrency(fromCurrency);
     setConvertedToCurrency(toCurrency);
-  }, [fromCurrency]);
+  }, [fromCurrency, toCurrency]);
 
   async function handleConvert() {
     if (inputAmount <= 0) {
@@ -276,12 +274,14 @@ export default function ConverterForm() {
 
           <div className="flex items-end md:self-end">
             <button
+              type="button"
               aria-label="Inverter moedas"
               title="Inverter moedas"
               className="bg-blue-600 hover:bg-blue-700 rounded-full p-2 text-white w-10 h-10 flex items-center justify-center cursor-pointer"
               onClick={() => {
                 setFromCurrency(toCurrency);
                 setToCurrency(fromCurrency);
+                handleConvert();
               }}
             >
               <FaExchangeAlt />
@@ -307,6 +307,7 @@ export default function ConverterForm() {
       </div>
 
       <button
+        type="submit"
         onClick={handleConvert}
         disabled={loading}
         className="w-40 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50 cursor-pointer"
